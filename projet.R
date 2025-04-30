@@ -64,4 +64,59 @@ plot(fit_month2)
 plot(profile(fit_month1))
 plot(profile(fit_month2))
 
+# Fitting standard three-parameter GEV to annual maxima
+value_year<-yearly_maxima$value
+fit.gev_year1<-fgev(value_year, prob=1/10)
+fit.gev_year2<-fgev(value_year, prob=1/100)
+fit.gev_year1
+fit.gev_year2
+par(mfrow=c(1,4))
+plot(fit.gev_year1)
+plot(fit.gev_year2)
+par(mfrow=c(1,3))
+plot(profile(fit.gev_year1))
+plot(profile(fit.gev_year2))
+
+
+# Fitting standard three-parameter GEV to monthly maxima
+value_month<-monthly_maxima$value
+fit.gev_month1<-fgev(value_month, prob=1/(10*12))
+fit.gev_month2<-fgev(value_month, prob=1/(100*12))
+fit.gev_month1
+fit.gev_month2
+par(mfrow=c(1,4))
+plot(fit.gev_month1)
+plot(fit.gev_month2)
+par(mfrow=c(1,3))
+plot(profile(fit.gev_month1))
+plot(profile(fit.gev_month2))
+
+# Fitting standard three-parameter POT to annual maxima
+value_year<-yearly_maxima$value
+fit.pot_year1<-fpot(value_year, prob=1/10)
+fit.pot_year2<-fpot(value_year, prob=1/100)
+fit.pot_year1
+fit.pot_year2
+par(mfrow=c(1,4))
+plot(fit.pot_year1)
+plot(fit.pot_year2)
+par(mfrow=c(1,3))
+plot(profile(fit.pot_year1))
+plot(profile(fit.pot_year2))
+
+
+# Fitting standard three-parameter POT to monthly maxima
+value_month<-monthly_maxima$value
+fit.pot_month1<-fpot(value_month, prob=1/(10*12))
+fit.pot_month2<-fpot(value_month, prob=1/(100*12))
+fit.pot_month1
+fit.pot_month2
+par(mfrow=c(1,4))
+plot(fit.pot_month1)
+plot(fit.pot_month2)
+par(mfrow=c(1,3))
+plot(profile(fit.pot_month1))
+plot(profile(fit.pot_month2))
+
+
 
