@@ -40,15 +40,22 @@ yearly_maxima <-data.tmp %>%
 
 # Fitting standard three-parameter GEV to annual maxima
 value_year<-yearly_maxima$value
-fit_year<-fgev(value_year, prob=1/10)
-fit_year
+fit_year1<-fgev(value_year, prob=1/10)
+fit_year2<-fgev(value_year, prob=1/100)
+fit_year1
+fit_year2
 par(mfrow=c(1,4))
-plot(fit_year)
+plot(fit_year1)
+plot(fit_year1)
 
 
 # Fitting standard three-parameter GEV to monthly maxima
 value_month<-monthly_maxima$value
-fit_month1<-fgev(value_month, prob=1/(10*12))
+fit_month1<-fgev(value_month, prob=1/10)
+fit_month2<-fgev(value_month, prob=1/100)
 fit_month1
+fit_month2
 par(mfrow=c(1,4))
 plot(fit_month1)
+plot(fit_month1)
+
