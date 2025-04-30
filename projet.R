@@ -13,7 +13,7 @@ data.tmp <- data.frame("date"= data2025$date, "value"= data2025$no2,
 # compute daily maximum of hourly measurements
 library(dplyr)
 daily_maxima <-data.tmp %>%
-  group_by(year, month, day) %>%
+  group_by(year, month, week, day) %>%
   slice_max(order_by = value, n = 1, with_ties = FALSE) %>%
   drop_na() #drop missing observations
 
@@ -26,10 +26,18 @@ monthly_maxima <-data.tmp %>%
 
 # Compute weekly maximum of hourly measurements
 library(dplyr)
-monthly_maxima <-data.tmp %>%
-  group_by(year, month) %>%
+weekly_maxima <-data.tmp %>%
+  group_by(year, month, week) %>%
   slice_max(order_by = value, n = 1, with_ties = FALSE) %>%
   drop_na() #drop missing observations
 
+# Compute yearly maximum of hourly measurements
+library(dplyr)
+yearly_maxima <-data.tmp %>%
+  group_by(year) %>%
+  slice_max(order_by = value, n = 1, with_ties = FALSE) %>%
+  drop_na() #drop missing observations
 
-
+# Fitting standard three-parameter GEV to annual maxima
+value<-yearly_maxima$value
+fit<-fgev(value)
