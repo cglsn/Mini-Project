@@ -40,4 +40,7 @@ yearly_maxima <-data.tmp %>%
 
 # Fitting standard three-parameter GEV to annual maxima
 value<-yearly_maxima$value
-fit<-fgev(value)
+fit_year<-fgev(value)
+fit_year
+par(mfrow=c(1,4))
+plot(fit_year)
