@@ -101,27 +101,93 @@ plot(thresholds, mean_excess, type = "b", pch = 16, main = "Mean excess function
 
 
 # Fitting standard three-parameter POT to annual maxima
-fit.pot_year2
+u<-108 # Chosen based on threshold stability plots
+fit.pot_year1<-fpot(data2025$no2, threshold = u)
 par(mfrow=c(1,4))
 plot(fit.pot_year1)
-plot(fit.pot_year2)
-par(mfrow=c(1,3))
 plot(profile(fit.pot_year1))
-plot(profile(fit.pot_year2))
+
+# Number of observations per year (hourly data)
+npp <- 8766  # 24 × 365.25
+
+# Fit GPD with POT model for 10-year return period (slide 97)
+fit_pot_10 <- fpot(data2025$no2, threshold = u, mper = 10, npp = npp)
+plot(fit_pot_10)
+
+# Fit GPD with POT model for 100-year return period
+fit_pot_100 <- fpot(data2025$no2, threshold = u, mper = 100, npp = npp)
+plot(fit_pot_100)
 
 
-# Fitting standard three-parameter POT to monthly maxima
-value_month<-monthly_maxima$value
-fit.pot_month1<-fpot(value_month, prob=1/(10*12))
-fit.pot_month2<-fpot(value_month, prob=1/(100*12))
-fit.pot_month1
-fit.pot_month2
-par(mfrow=c(1,4))
-plot(fit.pot_month1)
-plot(fit.pot_month2)
-par(mfrow=c(1,3))
-plot(profile(fit.pot_month1))
-plot(profile(fit.pot_month2))
+# Inputs
+u <- 108               # Threshold
+npp <- 8766            # 24 × 365.25
+zeta_u <- mean(data2025$no2 > u, na.rm = TRUE)  # Proportion of exceedances
+
+# Estimated parameters from the GPD fit
+xi <- fit_pot$estimate["shape"]
+sigma <- fit_pot$estimate["scale"]
+
+# Function to compute return level for a given T
+pot_return_level <- function(T, u, sigma, xi, zeta_u) {
+  if (abs(xi) < 1e-6) {
+    # Gumbel case
+    return(u + sigma * log(T * zeta_u))
+  } else {
+    return(u + (sigma / xi) * ((T * zeta_u)^xi - 1))
+  }
+}
+
+# 10- and 100-year return levels
+y10 <- pot_return_level(10, u, sigma, xi, zeta_u)
+y100 <- pot_return_level(100, u, sigma, xi, zeta_u)
+
+# Output
+cat("10-year return level:", round(y10, 2), "\n")
+cat("100-year return level:", round(y100, 2), "\n")
+
+library(dplyr)
+
+# Get top 1% of all hourly values
+threshold_extreme <- quantile(data2025$no2, 0.99, na.rm = TRUE)
+
+# Add month information
+data.tmp <- data.frame(
+  date = data2025$date,
+  value = data2025$no2,
+  month = lubridate::month(data2025$date, label = TRUE)
+)
+
+# Filter extreme values
+extremes <- data.tmp %>% filter(value > threshold_extreme)
+
+# Plot frequency of extremes by month
+barplot(table(extremes$month), 
+        main = "Monthly frequency of top 1% NO₂ values",
+        ylab = "Count of extreme values",
+        xlab = "Month")
+
+library(lubridate)
+library(evir)
+
+# Filter observations between November and March
+data.tmp <- data.frame(date = data2025$date, value = data2025$no2)
+data.tmp$month <- month(data.tmp$date)
+
+winter_data <- data.tmp %>% filter(month %in% c(11, 12, 1, 2, 3))
+
+# Choose a threshold (e.g. 95th percentile of winter data)
+u_winter <- quantile(winter_data$value, 0.95, na.rm = TRUE)
+
+# Fit POT model on winter data
+fit_pot_winter <- fpot(winter_data$value, threshold = u_winter, std.err = TRUE)
+
+# Estimate exceedance probability (proportion above threshold)
+zeta_u <- mean(winter_data$value > u_winter, na.rm = TRUE)
+
+# Extract parameters
+xi <- fit_pot_winter$estimate["shape"]
+sigma <- fit_pot_winter$estimate["scale"]
 
 # Return level formula (slide 102)
 pot_return_level <- function(T, u, sigma, xi, zeta_u) {
