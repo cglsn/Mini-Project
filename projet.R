@@ -123,11 +123,13 @@ plot(profile(fit.pot))
 
 # Fit GPD with POT model for 10-year return period (slide 97)
 fit_pot_10 <- fpot(data.tmp$value, threshold = u, mper = 10, npp = npp)
+fit_pot_10
 par(mfrow=c(1,2))
 plot(profile(fit_pot_10))
 
 # Fit GPD with POT model for 100-year return period
 fit_pot_100 <- fpot(data.tmp$value, threshold = u, mper = 100, npp = npp)
+fit_pot_100
 par(mfrow=c(1,2))
 plot(profile(fit_pot_100))
 
