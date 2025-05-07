@@ -149,9 +149,9 @@ sigma <- fit_pot$estimate["scale"]
 pot_return_level <- function(T, u, sigma, xi, zeta_u) {
   if (abs(xi) < 1e-6) {
     # Gumbel case
-    return(u + sigma * log(T * zeta_u))
+    return(u + sigma * log(365.25*24*T * zeta_u))
   } else {
-    return(u + (sigma / xi) * ((T * zeta_u)^xi - 1))
+    return(u + (sigma / xi) * ((365.25*24*T * zeta_u)^xi - 1))
   }
 }
 
@@ -165,12 +165,6 @@ cat("100-year return level:", round(y100, 2), "\n")
 
 # plot residuals against time (monthly)
 library(evir)
-
-
-
-
-
-
 
 # Choose a threshold (can be adjusted depending on the data)
 u <- 71
@@ -225,7 +219,24 @@ winter_data <- data.tmp %>% filter(month %in% c(11, 12, 1, 2, 3))
 u_winter <- quantile(winter_data$value, 0.95, na.rm = TRUE) # Souldn't we plot the same graphs as before to select the threshold ?
 
 # Fit POT model on winter data
-fit_pot_winter <- fpot(winter_data$value, threshold = u_winter, std.err = TRUE)
+fit_pot_winter <- fpot(winter_data$value, threshold = u_winter, std.err = TRUE,  npp = npp)
+fit_pot_winter
+par(mfrow=c(1,4))
+plot(fit_pot_winter)
+par(mfrow=c(1,2))
+plot(profile(fit_pot_winter))
+
+# Fit GPD with POT model for 10-year return period in winter (slide 97)
+fit_pot_10_winter <- fpot(winter_data$value, threshold = u_winter, mper = 10, npp = npp)
+fit_pot_10_winter
+par(mfrow=c(1,2))
+plot(profile(fit_pot_10_winter))
+
+# Fit GPD with POT model for 100-year return period in winter
+fit_pot_100_winter <- fpot(winter_data$value, threshold = u_winter, mper = 100, npp = npp)
+fit_pot_100_winter
+par(mfrow=c(1,2))
+plot(profile(fit_pot_100_winter))
 
 # Estimate exceedance probability (proportion above threshold)
 zeta_u_winter <- mean(winter_data$value > u_winter, na.rm = TRUE)
