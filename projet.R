@@ -106,9 +106,10 @@ plot(thresholds, scales, type = "b", pch = 16, main = "Scale parameter", xlab = 
 plot(thresholds, shapes, type = "b", pch = 16, main = "Shape parameter", xlab = "Threshold", ylab = "Shape")
 plot(thresholds[valid], mean_excess[valid], type = "b", pch = 16, main = "Mean excess function", xlab = "Threshold", ylab = "Mean excess")
 
+par(mfrow=c(1,3))
 mrlplot(data.tmp$value)
 tcplot(data.tmp$value,
-       tlim = c(10, 150), model = "gpd", nt = 20)
+       tlim = c(10, 150), model = "gpd", nt = 30)
 
 
 
@@ -170,7 +171,7 @@ library(evir)
 u <- 71
 
 # Fit the GPD (POT) model to the data above the threshold
-fit.pot <- gpd.fit(data2025$value, threshold = u)
+fit.pot <- fpot(data.tmp$value, threshold = u)
 
 # Compute the CDF values under the fitted GPD model
 F_vals <- pgpd(data2025$value,
@@ -190,7 +191,6 @@ plot(data2025$date, residuals,
 
 # Add horizontal reference line at 0
 abline(h = 0, col = 'red', lty = 2)
-
 
 
 
@@ -216,7 +216,11 @@ library(evir)
 winter_data <- data.tmp %>% filter(month %in% c(11, 12, 1, 2, 3))
 
 # Choose a threshold (e.g. 95th percentile of winter data)
-u_winter <- quantile(winter_data$value, 0.95, na.rm = TRUE) # Souldn't we plot the same graphs as before to select the threshold ?
+par(mfrow=c(1,3))
+mrlplot(winter_data$value)
+tcplot(winter_data$value,
+       tlim = c(10, 150), model = "gpd", nt = 30)
+u_winter <- quantile(winter_data$value, 0.95, na.rm = TRUE) 
 
 # Fit POT model on winter data
 fit_pot_winter <- fpot(winter_data$value, threshold = u_winter, std.err = TRUE,  npp = npp)
