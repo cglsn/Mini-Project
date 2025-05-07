@@ -38,6 +38,7 @@ yearly_maxima <-data.tmp %>%
   slice_max(order_by = value, n = 1, with_ties = FALSE) %>%
   drop_na() #drop missing observations
 
+library(evd)
 # Fitting standard three-parameter GEV to annual maxima
 value_year<-yearly_maxima$value
 fit_year<-fgev(value_year)
@@ -48,8 +49,6 @@ fit_year1
 fit_year2
 par(mfrow=c(1,4))
 plot(fit_year)
-plot(fit_year1)
-plot(fit_year2)
 par(mfrow=c(1,3))
 plot(profile(fit_year))
 plot(profile(fit_year1))
@@ -57,14 +56,16 @@ plot(profile(fit_year2))
 
 # Fitting standard three-parameter GEV to monthly maxima
 value_month<-monthly_maxima$value
+fit_month<-fgev(value_month)
 fit_month1<-fgev(value_month, prob=1/(10*12))
 fit_month2<-fgev(value_month, prob=1/(100*12))
+fit_month
 fit_month1
 fit_month2
 par(mfrow=c(1,4))
-plot(fit_month1)
-plot(fit_month2)
+plot(fit_month)
 par(mfrow=c(1,3))
+plot(profile(fit_month))
 plot(profile(fit_month1))
 plot(profile(fit_month2))
 
@@ -111,11 +112,10 @@ tcplot(data.tmp$value,
 
 
 # Fitting standard three-parameter POT to annual maxima
-u<-73 # Chosen based on threshold stability plots
+u<-71 # Chosen based on threshold stability plots
 npp <- 8766  # 24 × 365.25 = Number of observations per year (hourly data)
 fit.pot<-fpot(data.tmp$value, threshold = u, npp=npp)
-summary(fit.pot)
-str(fit.pot)
+fit.pot
 par(mfrow=c(1,4))
 plot(fit.pot)
 par(mfrow=c(1,2))
@@ -123,17 +123,17 @@ plot(profile(fit.pot))
 
 # Fit GPD with POT model for 10-year return period (slide 97)
 fit_pot_10 <- fpot(data.tmp$value, threshold = u, mper = 10, npp = npp)
-par(mfrow=c(1,4))
-plot(fit_pot_10)
+par(mfrow=c(1,2))
+plot(profile(fit_pot_10))
 
 # Fit GPD with POT model for 100-year return period
 fit_pot_100 <- fpot(data.tmp$value, threshold = u, mper = 100, npp = npp)
-par(mfrow=c(1,4))
-plot(fit_pot_100)
+par(mfrow=c(1,2))
+plot(profile(fit_pot_100))
 
 
 # Inputs
-u <- 73               # Threshold
+u <- 71               # Threshold
 npp <- 8766            # 24 × 365.25
 zeta_u <- mean(data.tmp$value > u, na.rm = TRUE)  # Proportion of exceedances
 fit_pot <- fpot(data.tmp$value, threshold = u, std.err = TRUE)
@@ -170,7 +170,7 @@ library(evir)
 
 
 # Choose a threshold (can be adjusted depending on the data)
-u <- 73 
+u <- 71
 
 # Fit the GPD (POT) model to the data above the threshold
 fit.pot <- gpd.fit(data2025$value, threshold = u)
