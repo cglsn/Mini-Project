@@ -1,5 +1,4 @@
 # Loading data
-data2025<-(load(file = "/Users/camillegilson/Desktop/Risk and environmental sustainability/Mini-Projet/Sheffield.Tinsley_no2.Rdata"))
 data2025<-Sheffield.Tinsley
 
 # See structure of the object
@@ -56,10 +55,6 @@ plot(profile(fit_year))
 plot(profile(fit_year1))
 plot(profile(fit_year2))
 
-# GEV return level from slide (102) 
-# Implémenter la formule pour sortir la valeur directment, comme ce que j'ai fais dans le cas POT
-
-
 # Fitting standard three-parameter GEV to monthly maxima
 value_month<-monthly_maxima$value
 fit_month1<-fgev(value_month, prob=1/(10*12))
@@ -73,15 +68,8 @@ par(mfrow=c(1,3))
 plot(profile(fit_month1))
 plot(profile(fit_month2))
 
-# GEV return level from slide (102) 
-# Implémenter la formule pour sortir la valeur directment, comme ce que j'ai fais dans le cas POT
 
-
-#J'abandonne pour l'instant le plot des résidus après des heures de recherche et de bug...
-
-
-#Une fois le problème réglé avec l'assistant, faire de même pour mensuel
-
+#Partie POT
 
 # Choisir une séquence de seuils à tester (par ex. percentiles 85 % à 98 %)
 thresholds <- quantile(data.tmp$value, probs = seq(0.85, 0.98, by = 0.01), na.rm = TRUE)
@@ -115,6 +103,11 @@ plot(thresholds, locs, type = "b", pch = 16, main = "Location parameter", xlab =
 plot(thresholds, scales, type = "b", pch = 16, main = "Scale parameter", xlab = "Threshold", ylab = "Scale")
 plot(thresholds, shapes, type = "b", pch = 16, main = "Shape parameter", xlab = "Threshold", ylab = "Shape")
 plot(thresholds[valid], mean_excess[valid], type = "b", pch = 16, main = "Mean excess function", xlab = "Threshold", ylab = "Mean excess")
+
+mrlplot(data.tmp$value)
+tcplot(data.tmp$value,
+       tlim = c(10, 150), model = "gpd", nt = 20)
+
 
 
 # Fitting standard three-parameter POT to annual maxima
@@ -166,6 +159,43 @@ y100 <- pot_return_level(100, u, sigma, xi, zeta_u)
 # Output
 cat("10-year return level:", round(y10, 2), "\n")
 cat("100-year return level:", round(y100, 2), "\n")
+
+# plot residuals against time (monthly)
+library(evir)
+
+
+
+
+
+
+
+# Choose a threshold (can be adjusted depending on the data)
+u <- 73 
+
+# Fit the GPD (POT) model to the data above the threshold
+fit.pot <- gpd.fit(data2025$value, threshold = u)
+
+# Compute the CDF values under the fitted GPD model
+F_vals <- pgpd(data2025$value,
+               loc = u,
+               scale = fit.pot$mle[1],
+               shape = fit.pot$mle[2])
+
+# Transform the CDF values to standard normal residuals
+# If the model is correct, these residuals should follow a standard normal distribution
+residuals <- qnorm(F_vals)
+
+# Plot residuals over time
+plot(data2025$date, residuals,
+     type = 'p', col = 'darkgreen', pch = 20,
+     xlab = 'Time', ylab = 'Residuals',
+     main = 'Residuals vs Time')
+
+# Add horizontal reference line at 0
+abline(h = 0, col = 'red', lty = 2)
+
+
+
 
 library(dplyr)
 
@@ -219,3 +249,4 @@ cat("Winter POT model (Nov–Mar):\n")
 cat("Threshold (u):", round(u_winter, 2), "\n")
 cat("10-year return level:", round(y10, 2), "\n")
 cat("100-year return level:", round(y100, 2), "\n")
+
