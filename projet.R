@@ -1,4 +1,5 @@
 # Loading data
+data2025<-(load(file = "/Users/camillegilson/Desktop/Risk and environmental sustainability/Mini-Projet/Sheffield.Tinsley_no2.Rdata"))
 data2025<-Sheffield.Tinsley
 
 # See structure of the object
