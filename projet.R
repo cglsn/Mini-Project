@@ -1,5 +1,5 @@
 # Loading data
-data2025<-(load(file = "/Users/camillegilson/Desktop/Risk and environmental sustainability/Mini-Projet/Sheffield.Tinsley_no2.Rdata"))
+data2025<-(load(file = "C:/Users/micae/OneDrive/Bureau/Risk and environnemental sustainability/Mini Projet/Mini-Project/Sheffield.Tinsley_no2.Rdata"))
 data2025<-Sheffield.Tinsley
 
 # See structure of the object
@@ -70,16 +70,54 @@ plot(profile(fit_month))
 plot(profile(fit_month1))
 plot(profile(fit_month2))
 
+# Plot residuals against time (monthly)
 
-#Partie POT
+# Extract estimated parameters from GEV fit
+loc_hat <- fit_month$param[1]
+scale_hat <- fit_month$param[2]
 
-# Choisir une séquence de seuils à tester (par ex. percentiles 85 % à 98 %)
+# Compute standardized residuals for monthly maxima
+std_resids <- (monthly_maxima$value - loc_hat) / scale_hat
+
+# Plot residuals vs time
+plot(monthly_maxima$date, std_resids,
+     type = "o", pch = 16,
+     xlab = "Date", ylab = "Standardized Residuals",
+     main = "Residuals vs Time (Monthly Maxima)",
+     col = "black")
+abline(h = 0, col = "red", lty = 2)
+abline(lm(std_resids ~ as.numeric(monthly_maxima$date)), col = "blue", lwd = 2)
+
+
+# Plot residuals against time (yearly)
+
+# Extract estimated parameters
+loc_hat_year <- fit_year$param[1]
+scale_hat_year <- fit_year$param[2]
+
+# Compute standardized residuals
+std_resids_year <- (yearly_maxima$value - loc_hat_year) / scale_hat_year
+
+# Plot residuals vs time
+plot(yearly_maxima$date, std_resids_year,
+     type = "o", pch = 16,
+     xlab = "Date", ylab = "Standardized Residuals",
+     main = "Residuals vs Time (Annual Maxima)",
+     col = "black")
+abline(h = 0, col = "red", lty = 2)
+abline(lm(std_resids_year ~ as.numeric(yearly_maxima$date)), col = "blue", lwd = 2)
+
+
+
+#POT Part
+
+# Choose a sequence of thresholds to test (e.g. 85% to 98% percentiles)
 thresholds <- quantile(data.tmp$value, probs = seq(0.85, 0.98, by = 0.01), na.rm = TRUE)
 
-# Initialiser des vecteurs pour stocker les estimations
+# Initialize vectors to store estimates
 locs <- scales <- shapes <- mean_excess <- numeric(length(thresholds))
 
-# Boucle pour ajuster fpot() à chaque seuil et stocker les paramètres
+# Loop to adjust fpot() at each threshold and store parameters
 for (i in seq_along(thresholds)) {
   th <- thresholds[i]
   exceedances <- data.tmp$value[data.tmp$value > th]
@@ -106,14 +144,15 @@ plot(thresholds, scales, type = "b", pch = 16, main = "Scale parameter", xlab = 
 plot(thresholds, shapes, type = "b", pch = 16, main = "Shape parameter", xlab = "Threshold", ylab = "Shape")
 plot(thresholds[valid], mean_excess[valid], type = "b", pch = 16, main = "Mean excess function", xlab = "Threshold", ylab = "Mean excess")
 
+
+#Mean Residual Life plot (mrlplot) and Threshold Choice plot (tcplot)
 par(mfrow=c(1,3))
 mrlplot(data.tmp$value)
 tcplot(data.tmp$value,
        tlim = c(10, 150), model = "gpd", nt = 30)
 
 
-
-# Fitting standard three-parameter POT to annual maxima
+# Fitting POT to annual maxima
 u<-71 # Chosen based on threshold stability plots
 npp <- 8766  # 24 × 365.25 = Number of observations per year (hourly data)
 fit.pot<-fpot(data.tmp$value, threshold = u, npp=npp)
@@ -164,35 +203,6 @@ y100 <- pot_return_level(100, u, sigma, xi, zeta_u)
 cat("10-year return level:", round(y10, 2), "\n")
 cat("100-year return level:", round(y100, 2), "\n")
 
-# plot residuals against time (monthly)
-library(evir)
-
-# Choose a threshold (can be adjusted depending on the data)
-u <- 71
-
-# Fit the GPD (POT) model to the data above the threshold
-fit.pot <- fpot(data.tmp$value, threshold = u)
-
-# Compute the CDF values under the fitted GPD model
-F_vals <- pgpd(data2025$value,
-               loc = u,
-               scale = fit.pot$mle[1],
-               shape = fit.pot$mle[2])
-
-# Transform the CDF values to standard normal residuals
-# If the model is correct, these residuals should follow a standard normal distribution
-residuals <- qnorm(F_vals)
-
-# Plot residuals over time
-plot(data2025$date, residuals,
-     type = 'p', col = 'darkgreen', pch = 20,
-     xlab = 'Time', ylab = 'Residuals',
-     main = 'Residuals vs Time')
-
-# Add horizontal reference line at 0
-abline(h = 0, col = 'red', lty = 2)
-
-
 
 library(dplyr)
 
@@ -205,9 +215,11 @@ extremes <- data.tmp %>% filter(value > threshold_extreme)
 # Plot frequency of extremes by month
 par(mfrow=c(1,1))
 barplot(table(extremes$month), 
-        main = "Monthly frequency of top 1% NO₂ values",
-        ylab = "Count of extreme values",
-        xlab = "Month")
+        names.arg = month.abb,  # Jan, Feb, Mar, …
+        main     = expression(paste("Monthly frequency of top 1% ", NO[2], " values")),
+        xlab     = "Month",
+        ylab     = "Count of extreme values")
+
 
 library(lubridate)
 library(evir)
@@ -267,4 +279,27 @@ cat("Winter POT model (Nov–Mar):\n")
 cat("Threshold (u):", round(u_winter, 2), "\n")
 cat("10-year return level:", round(y10, 2), "\n")
 cat("100-year return level:", round(y100, 2), "\n")
+
+# Plot residuals against time 
+u <- 71
+
+# Extract exceedance indices and values
+exceed_idx <- which(data.tmp$value > u)
+exceedances <- data.tmp$value[exceed_idx]
+times_exc <- data.tmp$date[exceed_idx]
+
+# Extract scale parameter from fit.pot
+scale_hat <- fit.pot$param["scale"]
+
+# Compute standardized residuals
+std_resids <- (exceedances - u) / scale_hat
+
+# Plot residuals vs time
+plot(times_exc, std_resids,
+     type = "o", pch = 16,
+     xlab = "Date", ylab = "Standardized Residuals",
+     main = "Residuals vs Time (POT)",
+     col = "black")
+abline(h = 0, col = "red", lty = 2)  # horizontal line
+
 
