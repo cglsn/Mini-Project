@@ -203,6 +203,28 @@ y100 <- pot_return_level(100, u, sigma, xi, zeta_u)
 cat("10-year return level:", round(y10, 2), "\n")
 cat("100-year return level:", round(y100, 2), "\n")
 
+# Plot residuals against time 
+u <- 71
+
+# Extract exceedance indices and values
+exceed_idx <- which(data.tmp$value > u)
+exceedances <- data.tmp$value[exceed_idx]
+times_exc <- data.tmp$date[exceed_idx]
+
+# Extract scale parameter from fit.pot
+scale_hat <- fit.pot$param["scale"]
+
+# Compute standardized residuals
+std_resids <- (exceedances - u) / scale_hat
+
+# Plot residuals vs time
+plot(times_exc, std_resids,
+     type = "o", pch = 16,
+     xlab = "Date", ylab = "Standardized Residuals",
+     main = "Residuals vs Time (POT)",
+     col = "black")
+abline(h = 0, col = "red", lty = 2)  # horizontal line
+
 
 library(dplyr)
 
@@ -232,7 +254,8 @@ par(mfrow=c(1,3))
 mrlplot(winter_data$value)
 tcplot(winter_data$value,
        tlim = c(10, 150), model = "gpd", nt = 30)
-u_winter <- quantile(winter_data$value, 0.95, na.rm = TRUE) 
+u_winter <- quantile(winter_data$value, 0.93, na.rm = TRUE) 
+u_winter<- 76
 
 # Fit POT model on winter data
 fit_pot_winter <- fpot(winter_data$value, threshold = u_winter, std.err = TRUE,  npp = npp)
@@ -264,9 +287,9 @@ sigma_winter <- fit_pot_winter$estimate["scale"]
 # Return level formula (slide 102)
 pot_return_level <- function(T, u, sigma, xi, zeta_u) {
   if (abs(xi) < 1e-6) {
-    return(u + sigma * log(T * zeta_u))
+    return(u + sigma * log(365.25*24*T * zeta_u))
   } else {
-    return(u + (sigma / xi) * ((T * zeta_u)^xi - 1))
+    return(u + (sigma / xi) * ((365.25*24*T * zeta_u)^xi - 1))
   }
 }
 
@@ -281,24 +304,23 @@ cat("10-year return level:", round(y10, 2), "\n")
 cat("100-year return level:", round(y100, 2), "\n")
 
 # Plot residuals against time 
-u <- 71
 
 # Extract exceedance indices and values
-exceed_idx <- which(data.tmp$value > u)
+exceed_idx <- which(data.tmp$value > u_winter)
 exceedances <- data.tmp$value[exceed_idx]
 times_exc <- data.tmp$date[exceed_idx]
 
 # Extract scale parameter from fit.pot
-scale_hat <- fit.pot$param["scale"]
+scale_hat <- fit_pot_winter$param["scale"]
 
 # Compute standardized residuals
-std_resids <- (exceedances - u) / scale_hat
+std_resids <- (exceedances - u_winter) / scale_hat
 
 # Plot residuals vs time
 plot(times_exc, std_resids,
      type = "o", pch = 16,
      xlab = "Date", ylab = "Standardized Residuals",
-     main = "Residuals vs Time (POT)",
+     main = "Residuals vs Time (winter POT)",
      col = "black")
 abline(h = 0, col = "red", lty = 2)  # horizontal line
 
