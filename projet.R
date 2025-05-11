@@ -1,5 +1,5 @@
 # Loading data
-data2025<-(load(file = "C:/Users/micae/OneDrive/Bureau/Risk and environnemental sustainability/Mini Projet/Mini-Project/Sheffield.Tinsley_no2.Rdata"))
+data2025<-(load(file = "/Users/camillegilson/Desktop/Risk and environmental sustainability/Mini-Projet/Sheffield.Tinsley_no2.Rdata"))
 data2025<-Sheffield.Tinsley
 
 # See structure of the object
@@ -142,7 +142,7 @@ par(mfrow = c(2, 2))
 plot(thresholds, locs, type = "b", pch = 16, main = "Location parameter", xlab = "Threshold", ylab = "Loc")
 plot(thresholds, scales, type = "b", pch = 16, main = "Scale parameter", xlab = "Threshold", ylab = "Scale")
 plot(thresholds, shapes, type = "b", pch = 16, main = "Shape parameter", xlab = "Threshold", ylab = "Shape")
-plot(thresholds[valid], mean_excess[valid], type = "b", pch = 16, main = "Mean excess function", xlab = "Threshold", ylab = "Mean excess")
+plot(thresholds, mean_excess, type = "b", pch = 16, main = "Mean excess function", xlab = "Threshold", ylab = "Mean excess")
 
 
 #Mean Residual Life plot (mrlplot) and Threshold Choice plot (tcplot)
@@ -323,5 +323,36 @@ plot(times_exc, std_resids,
      main = "Residuals vs Time (winter POT)",
      col = "black")
 abline(h = 0, col = "red", lty = 2)  # horizontal line
+
+# Extremal index estimation
+tlim <- quantile(data.tmp$value, probs = c(0.7, 0.95), na.rm = TRUE)
+par(mfrow = c(1, 4))
+for (r_val in c(1, 3, 5, 10)) {
+  exiplot(data.tmp$value, tlim = tlim, r = r_val, main = paste("r =", r_val))
+}
+# Since it is stable accross the different r, we can take r=1
+par(mfrow = c(1, 1))
+result <- exiplot(data.tmp$value, tlim = tlim, r = 1)
+result$x  # thresholds
+result$y  # extremal index estimates
+# For a threshold of 71, it suggets an extremal index of 0.33
+
+# Fitting POT and allowing for dependence and clustering:
+fit_pot_dep <- fpot(data.tmp$value, threshold = u, npp=npp, r=1, cmax=TRUE)
+fit_pot_dep
+
+# Computation of the return levels:
+sigma <- fit_pot_dep$estimate["scale"]
+xi <- fit_pot_dep$estimate["shape"]
+theta<-0.3261
+p_u <- mean(data.tmp$value > u, na.rm = TRUE)
+p_u
+N_p10 <- 365.25*24*10
+N_p100<- 365.25*24*100
+x_10 <- u + (sigma/xi)*((p_u*theta*N_p10)^xi -1)  
+x_100 <- u + (sigma/xi)*((p_u*theta*N_p100)^xi -1) 
+x_10
+x_100
+
 
 
