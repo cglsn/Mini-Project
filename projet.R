@@ -354,5 +354,15 @@ x_100 <- u + (sigma/xi)*((p_u*theta*N_p100)^xi -1)
 x_10
 x_100
 
+# Modelling non-stationarity
+library(mgcv)
+library(nlme)
+library(ismev)
+months <- as.numeric(format(monthly_maxima$date, "%m"))                                                         
+cosines <- cos(2*pi*(monthly_maxima$month-4+12*(monthly_maxima$year-1996))/12)
+sines <- sin(2*pi*(monthly_maxima$month-4+12*(monthly_maxima$year-1996))/12)
+fit_non_stat <- ismev::gev.fit(xdat=monthly_maxima$value, ydat=matrix(c((monthly_maxima$month-4+12*(monthly_maxima$year-1996))/(12*100),cosines, sines), ncol=3, byrow=F), mul=c(1:3)) 
+
+
 
 
