@@ -1,5 +1,5 @@
 # Loading data
-data2025<-(load(file = "/Users/camillegilson/Desktop/Risk and environmental sustainability/Mini-Projet/Sheffield.Tinsley_no2.Rdata"))
+data2025<-(load(file = "C:/Users/micae/OneDrive/Bureau/Risk and environnemental sustainability/Mini Projet/Mini-Project/Sheffield.Tinsley_no2.Rdata"))
 data2025<-Sheffield.Tinsley
 
 # See structure of the object
@@ -354,15 +354,118 @@ x_100 <- u + (sigma/xi)*((p_u*theta*N_p100)^xi -1)
 x_10
 x_100
 
+#Part 3.3
+library (ismev)
+
 # Modelling non-stationarity
 library(mgcv)
 library(nlme)
 library(ismev)
-months <- as.numeric(format(monthly_maxima$date, "%m"))                                                         
-cosines <- cos(2*pi*(monthly_maxima$month-4+12*(monthly_maxima$year-1996))/12)
-sines <- sin(2*pi*(monthly_maxima$month-4+12*(monthly_maxima$year-1996))/12)
-fit_non_stat <- ismev::gev.fit(xdat=monthly_maxima$value, ydat=matrix(c((monthly_maxima$month-4+12*(monthly_maxima$year-1996))/(12*100),cosines, sines), ncol=3, byrow=F), mul=c(1:3)) 
+
+library(ismev)
+
+# Define the time variable 
+t <- (monthly_maxima$month - 4 + 12 * (monthly_maxima$year - 1996))  # month index starting at April 1996
+trend <- t / (12 * 100)
+
+# Create seasonal components for K = 1
+cos1 <- cos(2 * pi * t / 12)
+sin1 <- sin(2 * pi * t / 12)
+
+# Create seasonal components for K = 2
+cos2 <- cos(4 * pi * t / 12)
+sin2 <- sin(4 * pi * t / 12)
+
+# ydat matrices for K = 1 and K = 2
+ydat_k1 <- matrix(c(trend, cos1, sin1), ncol = 3, byrow = FALSE)
+ydat_k2 <- matrix(c(trend, cos1, sin1, cos2, sin2), ncol = 5, byrow = FALSE)
+
+# M0: Stationary model
+fit_M0 <- gev.fit(xdat = monthly_maxima$value)
+
+# M1: K = 1, non-stationary location
+fit_M1 <- gev.fit(xdat = monthly_maxima$value,
+                  ydat = ydat_k1, mul = 1:3)
+
+# M2: K = 1, non-stationary location + scale
+fit_M2 <- gev.fit(xdat = monthly_maxima$value,
+                  ydat = ydat_k1, mul = 1:3, sigl = 1:3)
+
+# M3: K = 1, non-stationary location + scale + shape
+fit_M3 <- gev.fit(xdat = monthly_maxima$value,
+                  ydat = ydat_k1, mul = 1:3, sigl = 1:3, shl = 1:3)
+
+# M4: K = 2, non-stationary location
+fit_M4 <- gev.fit(xdat = monthly_maxima$value,
+                  ydat = ydat_k2, mul = 1:5)
+
+# M5: K = 2, non-stationary location + scale
+fit_M5 <- gev.fit(xdat = monthly_maxima$value,
+                  ydat = ydat_k2, mul = 1:5, sigl = 1:5)
+
+# M6: K = 2, non-stationary location + scale + shape
+fit_M6 <- gev.fit(xdat = monthly_maxima$value,
+                  ydat = ydat_k2, mul = 1:5, sigl = 1:5, shl = 1:5)
 
 
+extract_model_info <- function(fit, model_name = "Model") {
+  logLik <- -fit$nllh
+  dev <- 2 * fit$nllh
+  n_params <- length(fit$mle)
+  AIC <- dev + 2 * n_params
+  
+  return(data.frame(
+    Model = model_name,
+    LogLikelihood = round(logLik, 2),
+    Deviance = round(dev, 2),
+    N_Params = n_params,
+    AIC = round(AIC, 2)
+  ))
+}
 
 
+results <- rbind(
+  extract_model_info(fit_M0, "M0 (stationary)"),
+  extract_model_info(fit_M1, "M1 (K=1, loc)"),
+  extract_model_info(fit_M2, "M2 (K=1, loc+scale)"),
+  extract_model_info(fit_M3, "M3 (K=1, loc+scale+shape)"),
+  extract_model_info(fit_M4, "M4 (K=2, loc)"),
+  extract_model_info(fit_M5, "M5 (K=2, loc+scale)"),
+  extract_model_info(fit_M6, "M6 (K=2, loc+scale+shape)")
+)
+
+print(results)
+
+
+likelihood_ratio_test <- function(fit_simple, fit_complex, name_simple = "Simple", name_complex = "Complex") {
+  dev_simple <- 2 * fit_simple$nllh
+  dev_complex <- 2 * fit_complex$nllh
+  df <- length(fit_complex$mle) - length(fit_simple$mle)
+  stat <- dev_simple - dev_complex
+  p_value <- pchisq(stat, df = df, lower.tail = FALSE)
+  
+  cat(sprintf("Likelihood Ratio Test:\n"))
+  cat(sprintf("  %s deviance: %.2f\n", name_simple, dev_simple))
+  cat(sprintf("  %s deviance: %.2f\n", name_complex, dev_complex))
+  cat(sprintf("  Test statistic: %.2f (df = %d)\n", stat, df))
+  cat(sprintf("  p-value: %.4f\n", p_value))
+}
+
+# Test if M1 (K=1, loc) is significantly better than M0 (stationary)
+likelihood_ratio_test(fit_M0, fit_M1, "M0", "M1")
+
+# Test if M2 is significantly better than M1
+likelihood_ratio_test(fit_M1, fit_M2, "M1", "M2")
+
+# Test if M3 (K=1, loc+scale+shape) improves over M2 (loc+scale)
+likelihood_ratio_test(fit_M2, fit_M3, "M2", "M3")
+
+# Test if M4  improves over M1 
+likelihood_ratio_test(fit_M1, fit_M4, "M1", "M4")
+
+# Test if M5  improves over M4
+likelihood_ratio_test(fit_M4, fit_M5, "M4", "M5")
+
+
+# Test if M6  improves over M5
+likelihood_ratio_test(fit_M5, fit_M6, "M5", "M6")
