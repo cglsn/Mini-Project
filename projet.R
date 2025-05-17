@@ -341,6 +341,14 @@ result$y  # extremal index estimates
 fit_pot_dep <- fpot(data.tmp$value, threshold = u, npp=npp, r=1, cmax=TRUE)
 fit_pot_dep
 
+fit_pot_dep_10 <- fpot(data.tmp$value, threshold = u, npp=npp, r=1, mper=10, cmax=TRUE)
+fit_pot_dep_10
+plot(profile(fit_pot_dep_10))
+
+fit_pot_dep_100 <- fpot(data.tmp$value, threshold = u, npp=npp, r=1, mper=100, cmax=TRUE)
+fit_pot_dep_100
+plot(profile(fit_pot_dep_100))
+
 # Computation of the return levels:
 sigma <- fit_pot_dep$estimate["scale"]
 xi <- fit_pot_dep$estimate["shape"]
