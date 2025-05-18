@@ -1,5 +1,5 @@
 # Loading data
-data2025<-(load(file = "C:/Users/micae/OneDrive/Bureau/Risk and environnemental sustainability/Mini Projet/Mini-Project/Sheffield.Tinsley_no2.Rdata"))
+data2025<-(load(file = "/Users/camillegilson/Desktop/Risk and environmental sustainability/Mini-Projet/Sheffield.Tinsley_no2.Rdata"))
 data2025<-Sheffield.Tinsley
 
 # See structure of the object
@@ -55,6 +55,28 @@ plot(profile(fit_year))
 plot(profile(fit_year1))
 plot(profile(fit_year2))
 
+# Computation of the return levels
+gev_return_level <- function(T_years, m, eta, tau, xi) { # T_years is the return period expressed in years and m is the number of block maxima in a year
+  p <- 1/(T_years*m)
+  if (abs(xi) < 1e-6) {
+    return(eta - tau * log(-m*log(1-p)))
+  } else {
+    return(eta + (tau/xi)*((-m*log(1-p))^(-xi)-1))
+  }
+}
+
+#Parameters
+m <- 1
+eta <- fit_month$param["loc"]
+tau <- fit_month$param["scale"]
+xi <- fit_month$param["shape"]
+# Return levels
+y10_gev_year <- gev_return_level(10, m, eta, tau, xi)
+y100_gev_year <- gev_return_level(100, m, eta, tau, xi)
+# Print
+cat("10-year return level:", round(y10_gev_year, 2), "\n")
+cat("100-year return level:", round(y100_gev_year, 2), "\n")
+
 # Fitting standard three-parameter GEV to monthly maxima
 value_month<-monthly_maxima$value
 fit_month<-fgev(value_month)
@@ -69,6 +91,20 @@ par(mfrow=c(1,3))
 plot(profile(fit_month))
 plot(profile(fit_month1))
 plot(profile(fit_month2))
+
+# Computation of the return levels
+#Parameters
+m <- 12
+eta <- fit_month$param["loc"]
+tau <- fit_month$param["scale"]
+xi <- fit_month$param["shape"]
+# Return levels
+y10_gev_month <- gev_return_level(10, m, eta, tau, xi)
+y100_gev_month <- gev_return_level(100, m, eta, tau, xi)
+# Print
+cat("10-year return level:", round(y10_gev_month, 2), "\n")
+cat("100-year return level:", round(y100_gev_month, 2), "\n")
+
 
 # Plot residuals against time (monthly)
 
@@ -373,8 +409,8 @@ library(ismev)
 library(ismev)
 
 # Define the time variable 
-t <- (monthly_maxima$month - 4 + 12 * (monthly_maxima$year - 1996))  # month index starting at April 1996
-trend <- t / (12 * 100)
+t <- (monthly_maxima$month - 4 + 12 * (monthly_maxima$year - 1996))  # month index starting at t_0 = 0 with April 1996
+trend <- t / (12 * 100) # trend component in the model
 
 # Create seasonal components for K = 1
 cos1 <- cos(2 * pi * t / 12)
@@ -477,3 +513,41 @@ likelihood_ratio_test(fit_M4, fit_M5, "M4", "M5")
 
 # Test if M6  improves over M5
 likelihood_ratio_test(fit_M5, fit_M6, "M5", "M6")
+
+
+# 3.4
+# In 3.3, we saw that M1 is the best model so we will use the estimates given by this model in 3.4.
+
+# Computation of Y_t tilde = monthly_maxima_tilde 
+N <-length(t) # Number of months
+ones_vector <- rep(1, N) # vector of ones of length N
+coeffs_matrix <- matrix(c(ones_vector, trend, cos1, sin1), ncol = 4, byrow = FALSE)
+eta_hat <- c(fit_M1$mle[1], fit_M1$mle[2], fit_M1$mle[3], fit_M1$mle[4])
+monthly_maxima_tilde <- monthly_maxima$value - coeffs_matrix%*%eta_hat
+
+# Computation of the return levels
+# Parameters
+m <- 12 # number of observations by month
+tau_hat <- fit_M1$mle[5]
+xi_hat <- fit_M1$mle[6]
+# Return levels
+y_tilde_10 <- gev_return_level(10, m, 0, tau_hat, xi_hat)
+y_tilde_100 <- gev_return_level(100, m, 0, tau_hat, xi_hat)
+# Print
+cat("10-year return level:", round(y_tilde_10, 2), "\n")
+cat("100-year return level:", round(y_tilde_100, 2), "\n")
+
+fit_tilde <- gev.fit(monthly_maxima_tilde)
+# Return levels
+rl_10 <- gev.rl(fit_tilde, m = 120)
+rl_100 <- gev.rl(fit_tilde, m = 1200)
+# Outputs
+print(rl_10$estimate)   
+print(rl_10$lower)      
+print(rl_10$upper) 
+print(rl_100$estimate)   
+print(rl_100$lower)      
+print(rl_100$upper) 
+
+names(fit_tilde)
+fit_tilde$cov
