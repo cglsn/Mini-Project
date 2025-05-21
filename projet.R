@@ -56,8 +56,8 @@ plot(profile(fit_year1))
 plot(profile(fit_year2))
 
 # Computation of the return levels
-gev_return_level <- function(T_years, m, eta, tau, xi) { # T_years is the return period expressed in years and m is the number of block maxima in a year
-  p <- 1/(T_years*m)
+gev_return_level <- function(T, m, eta, tau, xi) { # T is the return period expressed in the same unity as the block maxima and m is the number of observations in a block maxima 
+  p <- 1/(T*m)
   if (abs(xi) < 1e-6) {
     return(eta - tau * log(-m*log(1-p)))
   } else {
@@ -66,10 +66,10 @@ gev_return_level <- function(T_years, m, eta, tau, xi) { # T_years is the return
 }
 
 #Parameters
-m <- 1
-eta <- fit_month$param["loc"]
-tau <- fit_month$param["scale"]
-xi <- fit_month$param["shape"]
+m <-365.25*24
+eta <- fit_year$param["loc"]
+tau <- fit_year$param["scale"]
+xi <- fit_year$param["shape"]
 # Return levels
 y10_gev_year <- gev_return_level(10, m, eta, tau, xi)
 y100_gev_year <- gev_return_level(100, m, eta, tau, xi)
@@ -94,13 +94,13 @@ plot(profile(fit_month2))
 
 # Computation of the return levels
 #Parameters
-m <- 12
+m <- 30.44*24
 eta <- fit_month$param["loc"]
 tau <- fit_month$param["scale"]
 xi <- fit_month$param["shape"]
 # Return levels
-y10_gev_month <- gev_return_level(10, m, eta, tau, xi)
-y100_gev_month <- gev_return_level(100, m, eta, tau, xi)
+y10_gev_month <- gev_return_level(120, m, eta, tau, xi)
+y100_gev_month <- gev_return_level(1200, m, eta, tau, xi)
 # Print
 cat("10-year return level:", round(y10_gev_month, 2), "\n")
 cat("100-year return level:", round(y100_gev_month, 2), "\n")
@@ -527,12 +527,12 @@ monthly_maxima_tilde <- monthly_maxima$value - coeffs_matrix%*%eta_hat
 
 # Computation of the return levels
 # Parameters
-m <- 12 # number of observations by month
+m <- 30.44*24 # number of observations by month
 tau_hat <- fit_M1$mle[5]
 xi_hat <- fit_M1$mle[6]
 # Return levels
-y_tilde_10 <- gev_return_level(10, m, 0, tau_hat, xi_hat)
-y_tilde_100 <- gev_return_level(100, m, 0, tau_hat, xi_hat)
+y_tilde_10 <- gev_return_level(120, m, 0, tau_hat, xi_hat)
+y_tilde_100 <- gev_return_level(1200, m, 0, tau_hat, xi_hat)
 # Print
 cat("10-year return level:", round(y_tilde_10, 2), "\n")
 cat("100-year return level:", round(y_tilde_100, 2), "\n")
