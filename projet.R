@@ -525,6 +525,7 @@ coeffs_matrix <- matrix(c(ones_vector, trend, cos1, sin1), ncol = 4, byrow = FAL
 eta_hat <- c(fit_M1$mle[1], fit_M1$mle[2], fit_M1$mle[3], fit_M1$mle[4])
 monthly_maxima_tilde <- monthly_maxima$value - coeffs_matrix%*%eta_hat
 
+
 # Computation of the return levels
 # Parameters
 m <- 30.44*24 # number of observations by month
@@ -537,17 +538,13 @@ y_tilde_100 <- gev_return_level(1200, m, 0, tau_hat, xi_hat)
 cat("10-year return level:", round(y_tilde_10, 2), "\n")
 cat("100-year return level:", round(y_tilde_100, 2), "\n")
 
-fit_tilde <- gev.fit(monthly_maxima_tilde)
-# Return levels
-rl_10 <- gev.rl(fit_tilde, m = 120)
-rl_100 <- gev.rl(fit_tilde, m = 1200)
-# Outputs
-print(rl_10$estimate)   
-print(rl_10$lower)      
-print(rl_10$upper) 
-print(rl_100$estimate)   
-print(rl_100$lower)      
-print(rl_100$upper) 
+rl_10<-y_tilde_10 + coeffs_matrix%*%eta_hat
+rl_100<-y_tilde_100 + coeffs_matrix%*%eta_hat
 
-names(fit_tilde)
-fit_tilde$cov
+plot(t, rl_10, type = "b",  # type = "b" means line plot
+     xlab = "Time", ylab = "Return level",
+     main = "10-year return level against time")
+
+plot(t, rl_100, type = "b",  # type = "b" means line plot
+     xlab = "Time", ylab = "Return level",
+     main = "100-year return level against time")
