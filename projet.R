@@ -43,17 +43,17 @@ library(evd)
 # Fitting standard three-parameter GEV to annual maxima
 value_year<-yearly_maxima$value
 fit_year<-fgev(value_year)
-fit_year1<-fgev(value_year, prob=1/10)
-fit_year2<-fgev(value_year, prob=1/100)
+fit_year10<-fgev(value_year, prob=1/10)
+fit_year100<-fgev(value_year, prob=1/100)
 fit_year
-fit_year1
-fit_year2
+fit_year10
+fit_year100
 par(mfrow=c(1,4))
 plot(fit_year)
 par(mfrow=c(1,3))
 plot(profile(fit_year))
-plot(profile(fit_year1))
-plot(profile(fit_year2))
+plot(profile(fit_year10))
+plot(profile(fit_year100))
 
 # Computation of the return levels
 gev_return_level <- function(T, m, eta, tau, xi) { # T is the return period expressed in the same unity as the block maxima and m is the number of observations in a block maxima 
@@ -80,17 +80,17 @@ cat("100-year return level:", round(y100_gev_year, 2), "\n")
 # Fitting standard three-parameter GEV to monthly maxima
 value_month<-monthly_maxima$value
 fit_month<-fgev(value_month)
-fit_month1<-fgev(value_month, prob=1/(10*12))
-fit_month2<-fgev(value_month, prob=1/(100*12))
+fit_month10<-fgev(value_month, prob=1/(10*12))
+fit_month100<-fgev(value_month, prob=1/(100*12))
 fit_month
-fit_month1
-fit_month2
+fit_month10
+fit_month100
 par(mfrow=c(1,4))
 plot(fit_month)
 par(mfrow=c(1,3))
 plot(profile(fit_month))
-plot(profile(fit_month1))
-plot(profile(fit_month2))
+plot(profile(fit_month10))
+plot(profile(fit_month100))
 
 # Computation of the return levels
 #Parameters
@@ -522,8 +522,8 @@ likelihood_ratio_test(fit_M5, fit_M6, "M5", "M6")
 N <-length(t) # Number of months
 ones_vector <- rep(1, N) # vector of ones of length N
 coeffs_matrix <- matrix(c(ones_vector, trend, cos1, sin1), ncol = 4, byrow = FALSE)
-eta_hat <- c(fit_M1$mle[1], fit_M1$mle[2], fit_M1$mle[3], fit_M1$mle[4])
-monthly_maxima_tilde <- monthly_maxima$value - coeffs_matrix%*%eta_hat
+eta_hat_ <- c(fit_M1$mle[1], fit_M1$mle[2], fit_M1$mle[3], fit_M1$mle[4])
+monthly_maxima_tilde <- monthly_maxima$value - coeffs_matrix%*%eta_hat_
 
 
 # Computation of the return levels
