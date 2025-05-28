@@ -537,7 +537,7 @@ y_tilde_100 <- gev_return_level(1200, m, 0, tau_hat, xi_hat)
 cat("10-year return level:", round(y_tilde_10, 2), "\n")
 cat("100-year return level:", round(y_tilde_100, 2), "\n")
 
-
+# Return levels in the original scale
 rl_10<-y_tilde_10 + coeffs_matrix%*%eta_hat
 rl_100<-y_tilde_100 + coeffs_matrix%*%eta_hat
 
@@ -549,4 +549,5 @@ plot(t, rl_100, type = "l",  # type = "l" means line plot
      xlab = "Time", ylab = "Return level",
      main = "100-year return level against time")
 
+# Observed 10-year return levels
 
