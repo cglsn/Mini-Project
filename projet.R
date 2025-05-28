@@ -399,14 +399,12 @@ x_10
 x_100
 
 #Part 3.3
-library (ismev)
 
 # Modelling non-stationarity
 library(mgcv)
 library(nlme)
 library(ismev)
 
-library(ismev)
 
 # Define the time variable 
 t <- (monthly_maxima$month - 4 + 12 * (monthly_maxima$year - 1996))  # month index starting at t_0 = 0 with April 1996
@@ -538,74 +536,6 @@ y_tilde_100 <- gev_return_level(1200, m, 0, tau_hat, xi_hat)
 # Print
 cat("10-year return level:", round(y_tilde_10, 2), "\n")
 cat("100-year return level:", round(y_tilde_100, 2), "\n")
-
-
-
-# Computation of the profile loglikelihood
-# Return level function (to get location from return level)
-get_loc_from_return_level <- function(z, m, scale, shape, T) {
-  p <- 1 / (T * m)
-  if (abs(shape) < 1e-6) {
-    loc <- z + scale * log(-log(1 - p))
-  } else {
-    loc <- z - (scale / shape) * ( (-log(1 - p))^(-shape) - 1 )
-  }
-  return(loc)
-}
-
-# Profile log-likelihood function for gev.fit result
-profile_loglik <- function(z, data, fit, T = 10, m = 1) {
-  scale <- fit$mle[5]
-  shape <- fit$mle[6]
-  
-  # Calculate location corresponding to fixed return level z
-  loc <- get_loc_from_return_level(z, m, scale, shape, T)
-  
-  # Compute log-likelihood with location fixed, scale and shape fixed
-  # Using dgev from evd package (compatible)
-  ll <- sum(dgev(data, loc = loc, scale = scale, shape = shape, log = TRUE))
-  
-  return(ll)
-}
-# Your data vector
-data <- monthly_maxima_tilde  # or your dataset
-
-
-# Number of observations per block (e.g., 1 for annual, 12 for monthly)
-m <- 12  
-
-# Return period in years
-T <- 100
-
-# Calculate MLE return level (for reference and grid center)
-p <- 1 / (T * m)
-if (abs(xi_hat) < 1e-6) {
-  rl_hat <- eta_hat - tau_hat * log(-log(1 - p))
-} else {
-  rl_hat <- eta_hat + (tau_hat / xi_hat) * ( (-log(1 - p))^(-xi_hat) - 1 )
-}
-
-# Create grid of return levels around rl_hat (±30%)
-z_grid <- seq(rl_hat * 0.7, rl_hat * 1.3, length.out = 100)
-
-# Compute profile log-likelihood on grid
-loglik_vals <- sapply(z_grid, profile_loglik, data = data, fit = fit_M1, T = T, m = m)
-
-# Plot raw profile log-likelihood (like evd)
-max_loglik <- max(loglik_vals)
-plot(z_grid, loglik_vals, type = "l", lwd = 2,
-     xlab = paste0(T, "-year Return Level"),
-     ylab = "Profile Log-Likelihood",
-     main = "Raw Profile Log-Likelihood")
-abline(h = max_loglik - qchisq(0.95, df = 1)/2, col = "red", lty = 2)
-
-# Plot normalized profile log-likelihood (peak at zero)
-plot(z_grid, loglik_vals - max_loglik, type = "l", lwd = 2,
-     xlab = paste0(T, "-year Return Level"),
-     ylab = "Relative Profile Log-Likelihood",
-     main = "Normalized Profile Log-Likelihood")
-abline(h = -qchisq(0.95, df = 1)/2, col = "red", lty = 2)
-
 
 
 rl_10<-y_tilde_10 + coeffs_matrix%*%eta_hat
