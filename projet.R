@@ -42,18 +42,18 @@ yearly_maxima <-data.tmp %>%
 library(evd)
 # Fitting standard three-parameter GEV to annual maxima
 value_year<-yearly_maxima$value
-fit_year<-fgev(value_year)
-fit_year10<-fgev(value_year, prob=1/10)
-fit_year100<-fgev(value_year, prob=1/100)
-fit_year
-fit_year10
-fit_year100
+fit.year<-fgev(value_year)
+fit.year10<-fgev(value_year, prob=1/10)
+fit.year100<-fgev(value_year, prob=1/100)
+fit.year
+fit.year10
+fit.year100
 par(mfrow=c(1,4))
-plot(fit_year)
+plot(fit.year)
 par(mfrow=c(1,3))
-plot(profile(fit_year))
-plot(profile(fit_year10))
-plot(profile(fit_year100))
+plot(profile(fit.year))
+plot(profile(fit.year10))
+plot(profile(fit.year100))
 
 # Computation of the return levels
 gev_return_level <- function(T, m, eta, tau, xi) { # T is the return period expressed in the same unity as the block maxima and m is the number of observations in a block maxima 
@@ -67,9 +67,9 @@ gev_return_level <- function(T, m, eta, tau, xi) { # T is the return period expr
 
 #Parameters
 m <-365.25*24
-eta <- fit_year$param["loc"]
-tau <- fit_year$param["scale"]
-xi <- fit_year$param["shape"]
+eta <- fit.year$param["loc"]
+tau <- fit.year$param["scale"]
+xi <- fit.year$param["shape"]
 # Return levels
 y10_gev_year <- gev_return_level(10, m, eta, tau, xi)
 y100_gev_year <- gev_return_level(100, m, eta, tau, xi)
@@ -79,25 +79,25 @@ cat("100-year return level:", round(y100_gev_year, 2), "\n")
 
 # Fitting standard three-parameter GEV to monthly maxima
 value_month<-monthly_maxima$value
-fit_month<-fgev(value_month)
-fit_month10<-fgev(value_month, prob=1/(10*12))
-fit_month100<-fgev(value_month, prob=1/(100*12))
-fit_month
-fit_month10
-fit_month100
+fit.month<-fgev(value_month)
+fit.month10<-fgev(value_month, prob=1/(10*12))
+fit.month100<-fgev(value_month, prob=1/(100*12))
+fit.month
+fit.month10
+fit.month100
 par(mfrow=c(1,4))
-plot(fit_month)
+plot(fit.month)
 par(mfrow=c(1,3))
-plot(profile(fit_month))
-plot(profile(fit_month10))
-plot(profile(fit_month100))
+plot(profile(fit.month))
+plot(profile(fit.month10))
+plot(profile(fit.month100))
 
 # Computation of the return levels
 #Parameters
 m <- 30.44*24
-eta <- fit_month$param["loc"]
-tau <- fit_month$param["scale"]
-xi <- fit_month$param["shape"]
+eta <- fit.month$param["loc"]
+tau <- fit.month$param["scale"]
+xi <- fit.month$param["shape"]
 # Return levels
 y10_gev_month <- gev_return_level(120, m, eta, tau, xi)
 y100_gev_month <- gev_return_level(1200, m, eta, tau, xi)
@@ -109,8 +109,8 @@ cat("100-year return level:", round(y100_gev_month, 2), "\n")
 # Plot residuals against time (monthly)
 
 # Extract estimated parameters from GEV fit
-loc_hat <- fit_month$param[1]
-scale_hat <- fit_month$param[2]
+loc_hat <- fit.month$param[1]
+scale_hat <- fit.month$param[2]
 
 # Compute standardized residuals for monthly maxima
 std_resids <- (monthly_maxima$value - loc_hat) / scale_hat
@@ -128,8 +128,8 @@ abline(lm(std_resids ~ as.numeric(monthly_maxima$date)), col = "blue", lwd = 2)
 # Plot residuals against time (yearly)
 
 # Extract estimated parameters
-loc_hat_year <- fit_year$param[1]
-scale_hat_year <- fit_year$param[2]
+loc_hat_year <- fit.year$param[1]
+scale_hat_year <- fit.year$param[2]
 
 # Compute standardized residuals
 std_resids_year <- (yearly_maxima$value - loc_hat_year) / scale_hat_year
@@ -408,19 +408,19 @@ library(ismev)
 
 # Define the time variable 
 t <- (monthly_maxima$month - 4 + 12 * (monthly_maxima$year - 1996))  # month index starting at t_0 = 0 with April 1996
-trend <- t / (12 * 100) # trend component in the model
+trend <- t / (12 * 100) # trend component in the model, coefficient of eta_1
 
 # Create seasonal components for K = 1
-cos1 <- cos(2 * pi * t / 12)
-sin1 <- sin(2 * pi * t / 12)
+cosines1 <- cos(2 * pi * t / 12)
+sines1 <- sin(2 * pi * t / 12)
 
 # Create seasonal components for K = 2
-cos2 <- cos(4 * pi * t / 12)
-sin2 <- sin(4 * pi * t / 12)
+cosines2 <- cos(4 * pi * t / 12)
+sines2 <- sin(4 * pi * t / 12)
 
 # ydat matrices for K = 1 and K = 2
-ydat_k1 <- matrix(c(trend, cos1, sin1), ncol = 3, byrow = FALSE)
-ydat_k2 <- matrix(c(trend, cos1, sin1, cos2, sin2), ncol = 5, byrow = FALSE)
+ydat_k1 <- matrix(c(trend, cosines1, sines1), ncol = 3, byrow = FALSE)
+ydat_k2 <- matrix(c(trend, cosines1, sines1, cosines2, sines2), ncol = 5, byrow = FALSE)
 
 # M0: Stationary model
 fit_M0 <- gev.fit(xdat = monthly_maxima$value)
@@ -450,21 +450,21 @@ fit_M6 <- gev.fit(xdat = monthly_maxima$value,
                   ydat = ydat_k2, mul = 1:5, sigl = 1:5, shl = 1:5)
 
 
-extract_model_info <- function(fit, model_name = "Model") {
+# Print the results
+extract_model_info <- function(fit, model.name) {
   logLik <- -fit$nllh
   dev <- 2 * fit$nllh
   n_params <- length(fit$mle)
   AIC <- dev + 2 * n_params
   
   return(data.frame(
-    Model = model_name,
-    LogLikelihood = round(logLik, 2),
+    Name_of_model = model.name,
+    LogLik = round(logLik, 2),
     Deviance = round(dev, 2),
-    N_Params = n_params,
+    Params = n_params,
     AIC = round(AIC, 2)
   ))
 }
-
 
 results <- rbind(
   extract_model_info(fit_M0, "M0 (stationary)"),
@@ -475,11 +475,10 @@ results <- rbind(
   extract_model_info(fit_M5, "M5 (K=2, loc+scale)"),
   extract_model_info(fit_M6, "M6 (K=2, loc+scale+shape)")
 )
-
 print(results)
 
-
-likelihood_ratio_test <- function(fit_simple, fit_complex, name_simple = "Simple", name_complex = "Complex") {
+# Likelihood Ratio Statistic
+likelihood_ratio_stat <- function(fit_simple, fit_complex, name_simple = "Simple", name_complex = "Complex") {
   dev_simple <- 2 * fit_simple$nllh
   dev_complex <- 2 * fit_complex$nllh
   df <- length(fit_complex$mle) - length(fit_simple$mle)
@@ -494,23 +493,23 @@ likelihood_ratio_test <- function(fit_simple, fit_complex, name_simple = "Simple
 }
 
 # Test if M1 (K=1, loc) is significantly better than M0 (stationary)
-likelihood_ratio_test(fit_M0, fit_M1, "M0", "M1")
+likelihood_ratio_stat(fit_M0, fit_M1, "M0", "M1")
 
 # Test if M2 is significantly better than M1
-likelihood_ratio_test(fit_M1, fit_M2, "M1", "M2")
+likelihood_ratio_stat(fit_M1, fit_M2, "M1", "M2")
 
 # Test if M3 (K=1, loc+scale+shape) improves over M2 (loc+scale)
-likelihood_ratio_test(fit_M2, fit_M3, "M2", "M3")
+likelihood_ratio_stat(fit_M2, fit_M3, "M2", "M3")
 
 # Test if M4  improves over M1 
-likelihood_ratio_test(fit_M1, fit_M4, "M1", "M4")
+likelihood_ratio_stat(fit_M1, fit_M4, "M1", "M4")
 
 # Test if M5  improves over M4
-likelihood_ratio_test(fit_M4, fit_M5, "M4", "M5")
+likelihood_ratio_stat(fit_M4, fit_M5, "M4", "M5")
 
 
 # Test if M6  improves over M5
-likelihood_ratio_test(fit_M5, fit_M6, "M5", "M6")
+likelihood_ratio_stat(fit_M5, fit_M6, "M5", "M6")
 
 
 # 3.4
@@ -519,7 +518,7 @@ likelihood_ratio_test(fit_M5, fit_M6, "M5", "M6")
 # Computation of Y_t tilde = monthly_maxima_tilde 
 N <-length(t) # Number of months
 ones_vector <- rep(1, N) # vector of ones of length N
-coeffs_matrix <- matrix(c(ones_vector, trend, cos1, sin1), ncol = 4, byrow = FALSE)
+coeffs_matrix <- matrix(c(ones_vector, trend, cosines1, sines1), ncol = 4, byrow = FALSE)
 eta_hat_ <- c(fit_M1$mle[1], fit_M1$mle[2], fit_M1$mle[3], fit_M1$mle[4])
 monthly_maxima_tilde <- monthly_maxima$value - coeffs_matrix%*%eta_hat_
 
@@ -538,8 +537,8 @@ cat("10-year return level:", round(y_tilde_10, 2), "\n")
 cat("100-year return level:", round(y_tilde_100, 2), "\n")
 
 # Return levels in the original scale
-rl_10<-y_tilde_10 + coeffs_matrix%*%eta_hat
-rl_100<-y_tilde_100 + coeffs_matrix%*%eta_hat
+rl_10<-y_tilde_10 + coeffs_matrix%*%eta_hat_
+rl_100<-y_tilde_100 + coeffs_matrix%*%eta_hat_
 
 plot(t, rl_10, type = "l",  # type = "l" means line plot
      xlab = "Time", ylab = "Return level",
@@ -549,5 +548,42 @@ plot(t, rl_100, type = "l",  # type = "l" means line plot
      xlab = "Time", ylab = "Return level",
      main = "100-year return level against time")
 
+
 # Observed 10-year return levels
+library(dplyr)
+library(lubridate)
+
+# Compute the “anchor” April 1 for our first block
+first_obs   <- min(data.tmp$date, na.rm = TRUE)
+anchor_year <- if (month(first_obs) > 4 ||
+                   (month(first_obs) == 4 && day(first_obs) >= 1)) {
+  year(first_obs)
+} else {
+  year(first_obs) - 1L
+}
+anchor_date <- as.POSIXct(paste0(anchor_year, "-04-01 00:00:00"),
+                          tz = tz(first_obs))
+
+# define cut-points so that block 3 ends on 2025-04-01
+cuts <- anchor_date + years(c(0, 10, 19, 29))
+
+# tag every obs with its block number
+df_blocks <- data.tmp %>%
+  ungroup() %>%
+  mutate(block = findInterval(date, cuts) - 1L)
+
+# now extract only blocks 1, 2, and 3 — drop block 4 which starts at 2025-04-01
+max_per_block <- df_blocks %>%
+  filter(block < 3) %>%                                 # keep only the first three 10-year windows
+  group_by(block) %>%
+  slice_max(order_by = value, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  mutate(
+    period_start = cuts[block + 1],
+    period_end   = cuts[block + 2]
+  ) %>%
+  select(block, period_start, period_end, date, value) %>%
+  arrange(block)
+# Printing the results
+print(max_per_block)
 

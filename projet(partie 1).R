@@ -42,39 +42,39 @@ yearly_maxima <-data.tmp %>%
 library(evd)
 # Fitting standard three-parameter GEV to annual maxima
 value_year<-yearly_maxima$value
-fit_year<-fgev(value_year)
+fit.year<-fgev(value_year)
 fit_year1<-fgev(value_year, prob=1/10)
 fit_year2<-fgev(value_year, prob=1/100)
-fit_year
+fit.year
 fit_year1
 fit_year2
 par(mfrow=c(1,4))
-plot(fit_year)
+plot(fit.year)
 par(mfrow=c(1,3))
-plot(profile(fit_year))
+plot(profile(fit.year))
 plot(profile(fit_year1))
 plot(profile(fit_year2))
 
 # Fitting standard three-parameter GEV to monthly maxima
 value_month<-monthly_maxima$value
-fit_month<-fgev(value_month)
+fit.month<-fgev(value_month)
 fit_month1<-fgev(value_month, prob=1/(10*12))
 fit_month2<-fgev(value_month, prob=1/(100*12))
-fit_month
+fit.month
 fit_month1
 fit_month2
 par(mfrow=c(1,4))
-plot(fit_month)
+plot(fit.month)
 par(mfrow=c(1,3))
-plot(profile(fit_month))
+plot(profile(fit.month))
 plot(profile(fit_month1))
 plot(profile(fit_month2))
 
 # Plot residuals against time (monthly)
 
 # Extract estimated parameters from GEV fit
-loc_hat <- fit_month$param[1]
-scale_hat <- fit_month$param[2]
+loc_hat <- fit.month$param[1]
+scale_hat <- fit.month$param[2]
 
 # Compute standardized residuals for monthly maxima
 std_resids <- (monthly_maxima$value - loc_hat) / scale_hat
@@ -92,8 +92,8 @@ abline(lm(std_resids ~ as.numeric(monthly_maxima$date)), col = "blue", lwd = 2)
 # Plot residuals against time (yearly)
 
 # Extract estimated parameters
-loc_hat_year <- fit_year$param[1]
-scale_hat_year <- fit_year$param[2]
+loc_hat_year <- fit.year$param[1]
+scale_hat_year <- fit.year$param[2]
 
 # Compute standardized residuals
 std_resids_year <- (yearly_maxima$value - loc_hat_year) / scale_hat_year
